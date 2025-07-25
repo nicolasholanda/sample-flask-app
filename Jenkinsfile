@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        docker { image 'python:3.11' }
-    }
+    agent none
 
     environment {
         IMAGE_NAME = "flask-app"
@@ -9,18 +7,23 @@ pipeline {
     }
 
     stages {
-        stage('Install dependencies') {
+        stage('Install & Test') {
+            agent {
+                docker { image 'python:3.11' }
+            }
             steps {
                 sh 'pip install --upgrade pip'
                 sh 'pip install -r requirements.txt'
-            }
-        }
-        stage('Run unit tests') {
-            steps {
                 sh 'pytest --junitxml=test-results.xml'
+            }
+            post {
+                always {
+                    junit 'test-results.xml'
+                }
             }
         }
         stage('Build Docker Image') {
+            agent any
             steps {
                 script {
                     sh "docker build -t $IMAGE_TAG ."
@@ -30,9 +33,6 @@ pipeline {
     }
 
     post {
-        always {
-            junit 'test-results.xml'
-        }
         failure {
             echo 'Pipeline failed. Check logs for details.'
         }
