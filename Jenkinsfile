@@ -40,7 +40,9 @@ pipeline {
         stage('Deploy') {
             agent any
             steps {
-                sh 'helm upgrade --install flask-app $CHARTS_DIR/Flask-app --set image.repository=flask-app --set image.tag=latest'
+                withKubeConfig([credentialsId: 'jenkins-kubeconfig']) {
+                    sh 'helm upgrade --install flask-app $CHARTS_DIR/flask-app --set image.repository=flask-app --set image.tag=latest'
+                }
             }
         }
     }
