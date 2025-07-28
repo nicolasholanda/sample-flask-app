@@ -4,6 +4,8 @@ pipeline {
     environment {
         IMAGE_NAME = "flask-app"
         IMAGE_TAG = "flask-app:${env.BUILD_NUMBER}"
+        CHARTS_REPO = "https://github.com/nicolasholanda/sample-helm-charts.git"
+        CHARTS_DIR = "sample-helm-charts"
     }
 
     stages {
@@ -25,9 +27,20 @@ pipeline {
         stage('Build Docker Image') {
             agent any
             steps {
-                script {
-                    sh "docker build -t $IMAGE_TAG ."
-                }
+                sh 'eval $(minikube docker-env) && docker build -t flask-app:latest .'
+            }
+        }
+        stage('Clone Helm Charts') {
+            agent any
+            steps {
+                sh 'rm -rf $CHARTS_DIR'
+                sh 'git clone $CHARTS_REPO'
+            }
+        }
+        stage('Deploy') {
+            agent any
+            steps {
+                sh 'helm upgrade --install flask-app $CHARTS_DIR/Flask-app --set image.repository=flask-app --set image.tag=latest'
             }
         }
     }
