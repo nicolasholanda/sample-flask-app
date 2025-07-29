@@ -6,6 +6,7 @@ pipeline {
         IMAGE_TAG = "flask-app:${env.BUILD_NUMBER}"
         CHARTS_REPO = "https://github.com/nicolasholanda/sample-helm-charts.git"
         CHARTS_DIR = "sample-helm-charts"
+        DEPLOY_NAMESPACE = "apps"
     }
 
     stages {
@@ -41,7 +42,13 @@ pipeline {
             agent any
             steps {
                 withKubeConfig([credentialsId: 'jenkins-kubeconfig']) {
-                    sh 'helm upgrade --install flask-app $CHARTS_DIR/flask-app --set image.repository=flask-app --set image.tag=latest'
+                    sh '''
+                        helm upgrade --install flask-app $CHARTS_DIR/flask-app \
+                          --set image.repository=flask-app \
+                          --set image.tag=latest \
+                          --namespace $DEPLOY_NAMESPACE \
+                          --create-namespace
+                    '''
                 }
             }
         }
