@@ -28,7 +28,7 @@ pipeline {
         stage('Build Docker Image') {
             agent any
             steps {
-                sh 'eval $(minikube docker-env) && docker build -t flask-app:latest .'
+                sh 'eval $(minikube docker-env) && docker build -t $IMAGE_TAG .'
             }
         }
         stage('Clone Helm Charts') {
@@ -44,8 +44,8 @@ pipeline {
                 withKubeConfig([credentialsId: 'jenkins-kubeconfig']) {
                     sh '''
                         helm upgrade --install flask-app $CHARTS_DIR/flask-app \
-                          --set image.repository=flask-app \
-                          --set image.tag=latest \
+                          --set image.repository=$IMAGE_NAME \
+                          --set image.tag=$BUILD_NUMBER \
                           --namespace $DEPLOY_NAMESPACE \
                           --create-namespace
                     '''
